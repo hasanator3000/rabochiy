@@ -1,0 +1,83 @@
+.statusBar {
+  margin-top: 16px;
+  padding: 12px 20px;
+  /* Liquid Glass эффект */
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  box-shadow: 
+    0 4px 16px 0 rgba(31, 38, 135, 0.2),
+    0 2px 8px 0 rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--color-text-dark);
+  animation: fadeIn 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.statusBar[data-status="win"] {
+  background: rgba(255, 182, 193, 0.5);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: var(--color-white);
+  font-weight: 600;
+  border-color: rgba(255, 182, 193, 0.6);
+}
+
+.statusBar[data-status="lose"] {
+  background: rgba(200, 168, 233, 0.5);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: var(--color-white);
+  border-color: rgba(200, 168, 233, 0.6);
+}
+
+.statusBar[data-status="draw"] {
+  background: rgba(245, 230, 211, 0.4);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: var(--color-text-dark);
+  border-color: rgba(245, 230, 211, 0.5);
+}
+
+.statusBar[data-status="playing"] {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: var(--color-text-dark);
+}
+
+.statusBar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 182, 193, 0.1) 0%,
+    rgba(200, 168, 233, 0.1) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 12px;
+}
+
+.statusBar > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 480px) {
+  .statusBar {
+    margin-top: 8px;
+    margin-bottom: 16px;
+  }
+}
+

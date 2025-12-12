@@ -1,0 +1,16 @@
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 24px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@media (max-width: 480px) {
+  .board {
+    gap: 8px;
+    margin-top: 16px;
+    margin-bottom: auto;
+  }
+}
+

@@ -1,0 +1,178 @@
+.app {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 36px 24px 24px 24px;
+  min-height: 100vh;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #FF8FA3 0%, #C8A8E9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 4px rgba(255, 143, 163, 0.3));
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--color-text);
+  margin-top: 8px;
+}
+
+.startScreen {
+  text-align: center;
+  padding: 48px 24px;
+  /* Liquid Glass эффект с увеличенным контрастом */
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.3),
+    0 4px 16px 0 rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.startScreen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 182, 193, 0.2) 0%,
+    rgba(200, 168, 233, 0.2) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.startScreen > * {
+  position: relative;
+  z-index: 1;
+}
+
+.startScreen h2 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  margin-bottom: 16px;
+}
+
+.startScreen p {
+  font-size: 16px;
+  color: var(--color-text);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.startButton {
+  font-size: 20px;
+  padding: 16px 32px;
+  /* Liquid Glass эффект с сохранением розового цвета */
+  background: rgba(255, 182, 193, 0.5) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: var(--color-white) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 
+    0 8px 32px 0 rgba(255, 182, 193, 0.3),
+    0 4px 16px 0 rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  transition: var(--transition-smooth);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.startButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 182, 193, 0.3) 0%,
+    rgba(255, 182, 193, 0.5) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.startButton:hover:not(:disabled) {
+  background: rgba(255, 228, 225, 0.5) !important;
+  color: var(--color-white) !important;
+  box-shadow: 
+    0 12px 40px 0 rgba(255, 182, 193, 0.4),
+    0 6px 20px 0 rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.startButton:active:not(:disabled) {
+  background: rgba(255, 228, 225, 0.6) !important;
+  color: var(--color-white) !important;
+  box-shadow: 
+    0 4px 16px 0 rgba(255, 182, 193, 0.3),
+    0 2px 8px 0 rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+}
+
+.gameArea {
+  animation: fadeIn 0.3s ease-out;
+  position: relative;
+}
+
+@media (max-width: 480px) {
+  .app {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+  }
+
+  .header {
+    margin-top: 36px;
+    margin-bottom: 24px;
+  }
+
+  .title {
+    font-size: 28px;
+    margin-top: 24px;
+  }
+
+  .startScreen {
+    padding: 32px 16px;
+    margin-top: 48px;
+    margin-bottom: auto;
+  }
+
+  .gameArea {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    min-height: 0;
+  }
+}
+
