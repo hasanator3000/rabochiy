@@ -8,6 +8,7 @@ import { Telegraf } from 'telegraf';
 import { getDatabase } from '../database.js';
 import { promisify } from 'util';
 import { updateCalendarEventColor, deleteCalendarEvent } from '../services/calendar.js';
+import { setChatId } from '../lib/chatMap.js';
 
 let bot = null;
 
@@ -70,6 +71,8 @@ function setupHandlers() {
           INSERT OR REPLACE INTO telegram_users (username, chat_id, updated_at)
           VALUES (?, ?, CURRENT_TIMESTAMP)
         `, [username, userId]);
+                      // Also update the in-memory chatMap for API access
+                      setChatId(username, userId);
         
         console.log(`💾💾💾 СВЯЗЬ СОХРАНЕНА В БД! 💾💾💾`);
         console.log(` username: @${username} -> chat_id: ${userId}`);
