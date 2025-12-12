@@ -5,31 +5,41 @@
 import { initTelegramBot } from './telegram.js';
 import { initDatabase } from '../database.js';
 
-console.log('🚀 Запуск Telegram бота...');
+console.log('🚀 Запуск Telegram Бота...');
 
+// Инициализируем БД
 await initDatabase();
-(async () => { try {
-  const bot = initTelegramBot();
-  if (bot) {
-    console.log('✅ Telegram бот инициализирован и запущен!');
-  } else {
-    console.warn('⚠️ Бот не был инициализирован (возможно, отсутствует TELEGRAM_BOT_TOKEN)');
-    process.exit(1);
-  }
-} catch (error) {
-  console.error('❌ Ошибка при запуске бота:', error.message);
+console.log('✅ База данных инициализирована');
+
+// Инициализируем и запускаем бота
+const bot = initTelegramBot();
+
+if (!bot) {
+  console.error('❌ Ошибка: Бот не был инициализирован');
   process.exit(1);
 }
 
+console.log('✅ Telegram бот запущен и готов к работе!');
+
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('⏹️ Получен сигнал SIGINT, завершаем работу...'); })();
+  console.log('\n🛑 Получен сигнал SIGINT, завершаем работу...');
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.log('⏹️ Получен сигнал SIGTERM, завершаем работу...');
+  console.log('\n🛑 Получен сигнал SIGTERM, завершаем работу...');
   process.exit(0);
 });
 
-console.log('✅✅✅ БОТ УСПЕШНО ЗАПУЩЕН! ✅✅✅');
+// Обработка необработанных ошибок
+process.on('uncaughtException', (error) => {
+  console.error('❌ Необработанное исключение:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Необработанное отклонение Promise:', reason);
+});
+
+console.log('🎯 Бот полностью инициализирован и работает!');
