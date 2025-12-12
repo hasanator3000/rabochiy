@@ -31,17 +31,21 @@ export function initTelegramBot() {
     setupHandlers();
 
     // Запускаем бота
-    bot.launch().then(() => {
-      console.log('✅✅✅ TELEGRAF БОТ ЗАПУЩЕН! ✅✅✅');
-    }).catch((error) => {
-      console.error('❌ Ошибка запуска бота:', error);
+    // Запускаем бота с polling (более надежно для контейнеров)
+    bot.launch({
+      polling: {
+        interval: 300,
+        timeout: 20,
+        allowedUpdates: ['message', 'callback_query']
+      }
     });
-
+    console.log('✅✅✅ TELEGRAF БОТ ЗАПУЩЕН С POLLING! ✅✅✅');
+    
     // Graceful stop
     process.once('SIGINT', () => bot.stop('SIGINT'));
-    process.once('SIGTERM', () => bot.stop('SIGTERM'));
-
-    return bot;
+        process.once('SIGTERM', () => bot.stop('SIGTERM'));
+    
+    turn bot;
   } catch (error) {
     console.error('❌ Ошибка инициализации Telegram бота:', error.message);
     return null;
