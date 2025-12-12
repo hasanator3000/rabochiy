@@ -31,7 +31,7 @@ export function initTelegramBot() {
     setupHandlers();
 
     // Запускаем бота
-    // Запускаем бота с polling (более надежно для контейнеров)
+  
     bot.launch();
     console.log('✅✅✅ TELEGRAM БОТ ЗАПУЩЕН! ✅✅✅');
     
