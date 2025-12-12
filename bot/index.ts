@@ -3,10 +3,12 @@
  * Запускает Telegram бот для игры крестики-нолики
  */
 import { initTelegramBot } from './telegram.js';
+import { initDatabase } from '../database.js';
 
 console.log('🚀 Запуск Telegram бота...');
 
-try {
+await initDatabase();
+(async () => { try {
   const bot = initTelegramBot();
   if (bot) {
     console.log('✅ Telegram бот инициализирован и запущен!');
@@ -21,7 +23,7 @@ try {
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('⏹️ Получен сигнал SIGINT, завершаем работу...');
+  console.log('⏹️ Получен сигнал SIGINT, завершаем работу...'); })();
   process.exit(0);
 });
 
