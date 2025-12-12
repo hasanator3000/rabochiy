@@ -6,7 +6,7 @@ export async function sendResult(payload: {
   code?: string;
   username?: string;
 }): Promise<{ ok: boolean; error?: string; reason?: string }> {
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  const apiUrl = import.meta.env.VITE_API_URL ||  "/api";
   const url = `${apiUrl}/send`;
 
   try {
