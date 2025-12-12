@@ -15,7 +15,7 @@ let db = null;
  */
 export async function initDatabase() {
   return new Promise((resolve, reject) => {
-    const dbPath = process.env.DB_PATH || './data/telegram.db';
+    const dbPath = process.env.DB_PATH || '.'/tmp/telegram.db'
     db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
         console.error('Ошибка подключения к БД:', err);
