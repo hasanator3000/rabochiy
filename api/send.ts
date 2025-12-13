@@ -1,16 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { resolveChatId } from "../lib/chatMap";
 
 interface SendPayload {
   status: "win" | "lose";
   code?: string;
   username?: string;
-}
-
-interface ApiResponse {
-  ok: boolean;
-  error?: string;
-  reason?: string;
 }
 
 // Простой rate limiting (in-memory, для production лучше использовать Redis)
@@ -53,8 +46,9 @@ function setCorsHeaders(res: VercelResponse): void {
 }
 
 /**
- * handler: серверный эндпоинт для отправки результата в Telegram.
- * Адаптирован под формат Vercel Functions.
+ * handler: проксирует запросы на Railway API endpoint.
+ * Vercel Functions не имеют доступа к файловой системе для SQLite,
+ * поэтому все запросы перенаправляются на Railway сервер, где есть доступ к БД.
  */
 export default async function handler(
   req: VercelRequest,
@@ -94,113 +88,51 @@ export default async function handler(
     return;
   }
 
-  // Проверка токена бота
-  const BOT_TOKEN = process.env.BOT_TOKEN;
-  if (!BOT_TOKEN) {
-    console.error("BOT_TOKEN is not set");
-    res.status(500).json({ ok: false, error: "missing_bot_token" });
+  // Получаем URL Railway API из переменных окружения
+  const RAILWAY_API_URL = process.env.RAILWAY_API_URL;
+  if (!RAILWAY_API_URL) {
+    console.error("❌ RAILWAY_API_URL не установлен в переменных окружения");
+    res.status(500).json({ 
+      ok: false, 
+      error: "railway_api_not_configured",
+      message: "Railway API URL не настроен. Установите переменную окружения RAILWAY_API_URL в настройках Vercel."
+    });
     return;
   }
 
-  // Поиск chat_id по username
-  const chatId = body.username ? resolveChatId(body.username) : undefined;
-  
-  if (body.status === "win") {
-    if (!chatId) {
-      console.error(`❌ chat_id не найден для username: ${body.username}`);
-      console.error(`   Пользователь должен сначала написать боту /start`);
-      res.status(404).json({
-        ok: false,
-        error: "chat_not_found",
-        reason: "chat_not_found",
-      });
+  // Проксируем запрос на Railway API
+  try {
+    console.log(`📤 Проксирование запроса на Railway API: ${RAILWAY_API_URL}/api/send`);
+    console.log(`   Payload:`, JSON.stringify(body));
+
+    const railwayResponse = await fetch(`${RAILWAY_API_URL}/api/send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const responseData = await railwayResponse.json().catch(() => ({
+      ok: false,
+      error: "invalid_response",
+    }));
+
+    if (!railwayResponse.ok) {
+      console.error(`❌ Railway API error:`, responseData);
+      res.status(railwayResponse.status).json(responseData);
       return;
     }
 
-    // Формируем сообщение с промокодом
-    const message =
-      `🎉 Поздравляем с победой!\n\n` +
-      `🎁 Ваш промокод:\n` +
-      `\`${body.code}\`\n\n` +
-      `Используйте его для получения скидки!`;
-
-    try {
-      console.log(`📤 Отправка промокода через Telegram API`);
-      console.log(`   Username: ${body.username}`);
-      console.log(`   Chat ID: ${chatId}`);
-      console.log(`   Промокод: ${body.code}`);
-
-      const telegramResponse = await fetch(
-        `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: message,
-            parse_mode: "Markdown",
-          }),
-        }
-      );
-
-      if (!telegramResponse.ok) {
-        const errorData = await telegramResponse.json().catch(() => ({}));
-        console.error("❌ Telegram API error:", errorData);
-        
-        if (errorData.description?.includes("chat not found")) {
-          res.status(404).json({
-            ok: false,
-            error: "chat_not_found",
-            reason: "chat_not_found",
-          });
-          return;
-        }
-        
-        res.status(500).json({
-          ok: false,
-          error: "telegram_api_error",
-        });
-        return;
-      }
-
-      const result = await telegramResponse.json();
-      console.log(`✅✅✅ ПРОМОКОД УСПЕШНО ОТПРАВЛЕН! ✅✅✅`);
-      console.log(`   Message ID: ${result.result?.message_id}`);
-    } catch (error: any) {
-      console.error("❌ Ошибка отправки промокода:", error);
-      res.status(500).json({
-        ok: false,
-        error: "network_error",
-      });
-      return;
-    }
-  } else if (body.status === "lose" && body.username && chatId) {
-    // Для проигрыша тоже отправляем уведомление (опционально)
-    const message =
-      `😔 К сожалению, вы проиграли.\n\n` +
-      `Не расстраивайтесь! Попробуйте ещё раз и выиграйте промокод!`;
-
-    try {
-      console.log(`📤 Отправка уведомления о проигрыше`);
-      console.log(`   Username: ${body.username}`);
-      console.log(`   Chat ID: ${chatId}`);
-
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: message,
-        }),
-      });
-
-      console.log(`✅ Уведомление о проигрыше успешно отправлено`);
-    } catch (error: any) {
-      console.error("❌ Ошибка отправки уведомления:", error);
-      // Для проигрыша не критично, если не отправилось - не возвращаем ошибку
-    }
+    console.log(`✅✅✅ Запрос успешно проксирован на Railway! ✅✅✅`);
+    console.log(`   Response:`, responseData);
+    res.status(200).json(responseData);
+  } catch (error: any) {
+    console.error("❌ Ошибка проксирования на Railway API:", error);
+    res.status(500).json({
+      ok: false,
+      error: "railway_api_error",
+      message: error.message || "Не удалось подключиться к Railway API",
+    });
   }
-
-  // Успешный ответ
-  res.status(200).json({ ok: true });
 }

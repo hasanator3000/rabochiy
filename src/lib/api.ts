@@ -6,7 +6,10 @@ export async function sendResult(payload: {
   code?: string;
   username?: string;
 }): Promise<{ ok: boolean; error?: string; reason?: string }> {
-const apiUrl = import.meta.env.VITE_API_URL || "https://rabochiy-production.up.railway.app";  const url = `${apiUrl}/api/send`;
+  // В production используем относительный путь к Vercel API
+  // В development можно использовать VITE_API_URL для локального сервера
+  const apiUrl = import.meta.env.VITE_API_URL || "/api";
+  const url = `${apiUrl}/send`;
 
   try {
     const res = await fetch(url, {

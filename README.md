@@ -33,12 +33,15 @@
 npm install
 ```
 
-2. Создайте файл `.env` на основе `.env.example`:
+2. Создайте файл `.env` для локальной разработки:
 
 ```bash
-BOT_TOKEN=your_bot_token_here
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+# Для локальной разработки можно использовать локальный сервер
 VITE_API_URL=http://localhost:3000/api
 ```
+
+**Важно:** В production на Vercel НЕ устанавливайте `VITE_API_URL` - фронтенд будет использовать относительный путь `/api/send`, который автоматически проксируется на Railway через Vercel API.
 
 3. Запустите бота в отдельном терминале:
 
@@ -56,13 +59,18 @@ npm run dev
 
 ## Деплой
 
-### Vercel
+### Vercel (Frontend + API Proxy)
 
 1. Установите Vercel CLI: `npm i -g vercel`
 2. Задеплойте проект: `vercel`
 3. Установите переменные окружения в настройках проекта:
-   - `BOT_TOKEN` - токен Telegram бота
+   - `RAILWAY_API_URL` - **ОБЯЗАТЕЛЬНО**: URL вашего Railway API (например, `https://your-service.up.railway.app`)
    - `ALLOWED_ORIGIN` - разрешенный origin для CORS (опционально)
+
+**Важно:** 
+- **НЕ устанавливайте** `VITE_API_URL` на Vercel - фронтенд будет использовать относительный путь `/api/send`
+- Vercel API endpoint (`api/send.ts`) проксирует запросы на Railway API, где работает бот и есть доступ к SQLite БД
+- Фронтенд обращается к `/api/send` (Vercel), который затем проксирует запрос на Railway
 
 ### Netlify
 
@@ -70,16 +78,85 @@ npm run dev
 2. Задеплойте проект: `netlify deploy --prod`
 3. Установите переменные окружения в настройках проекта
 
-### Настройка бота для production
+### Railway (Backend + Bot)
 
-Для production рекомендуется использовать webhook вместо polling:
+1. Установите Railway CLI: `npm i -g @railway/cli`
+2. Задеплойте проект: `railway up`
+3. Установите переменные окружения в настройках проекта:
+   - `TELEGRAM_BOT_TOKEN` - токен Telegram бота
+   - `PORT` - порт для сервера (по умолчанию 3000)
+   - `DB_PATH` - путь к файлу БД (по умолчанию `./data/telegram.db`)
+   - `ALLOWED_ORIGIN` - разрешенный origin для CORS (опционально, по умолчанию разрешены все Vercel домены)
 
-1. Установите переменную `WEBHOOK_URL` в `.env`:
+**Важно:** 
+- На Railway должен быть запущен Express сервер (`server.ts`)
+- После деплоя получите публичный URL вашего сервиса и укажите его в переменной `RAILWAY_API_URL` на Vercel
+- Сервер на Railway имеет доступ к SQLite БД и может отправлять сообщения через Telegram бота
+
+#### Подключение к Railway по SSH
+
+**Быстрый способ:**
+```bash
+npm run railway:ssh
 ```
-WEBHOOK_URL=https://your-domain.com/api/webhook
+
+**Или используйте скрипт:**
+```bash
+./scripts/railway-connect.sh
 ```
 
-2. Создайте endpoint для webhook в `api/webhook.ts` (если нужно)
+**Пошаговая инструкция:**
+
+1. Авторизуйтесь в Railway:
+```bash
+npm run railway:login
+```
+
+2. Привяжите проект к Railway:
+```bash
+npm run railway:link
+```
+
+3. Подключитесь по SSH:
+```bash
+npm run railway:ssh
+```
+
+**Примечание:** `railway connect` используется для подключения к базам данных (PostgreSQL, MongoDB и т.д.), а `railway ssh` - для SSH подключения к сервису.
+
+**Другие полезные команды:**
+```bash
+npm run railway:status  # Проверить статус проекта
+npm run railway:logs    # Просмотреть логи
+```
+
+### Архитектура деплоя
+
+Проект использует разделенную архитектуру:
+
+- **Vercel**: Frontend (React) + API Proxy (`api/send.ts`)
+  - Frontend отправляет запросы на `/api/send`
+  - Vercel API проксирует запросы на Railway API
+  
+- **Railway**: Backend сервер (`server.ts`) + Telegram бот
+  - Express сервер с endpoint `/api/send`
+  - Доступ к SQLite БД для хранения связей username → chat_id
+  - Telegram бот для отправки промокодов
+
+**Почему такая архитектура?**
+- Vercel Functions не имеют доступа к файловой системе для SQLite
+- Railway предоставляет полноценный сервер с доступом к БД
+- Разделение позволяет масштабировать компоненты независимо
+
+### Получение Railway API URL
+
+После деплоя на Railway:
+
+1. Откройте проект в [Railway Dashboard](https://railway.app)
+2. Выберите сервис с вашим backend
+3. Перейдите на вкладку **Settings** → **Networking**
+4. Скопируйте **Public Domain** (например, `https://your-service.up.railway.app`)
+5. Укажите этот URL в переменной `RAILWAY_API_URL` на Vercel
 
 ## Использование
 

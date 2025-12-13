@@ -26,7 +26,42 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+// Настройка CORS для разрешения запросов с Vercel и других доменов
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Разрешаем запросы без origin (например, из Postman, curl)
+    if (!origin) return callback(null, true);
+    
+    // Разрешаем запросы с Vercel доменов
+    const allowedOrigins = [
+      /^https:\/\/.*\.vercel\.app$/,
+      /^https:\/\/rabochiy-five\.vercel\.app$/,
+      process.env.ALLOWED_ORIGIN,
+    ].filter(Boolean);
+    
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return origin === allowed;
+      }
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️  CORS: Запрос с неразрешенного origin: ${origin}`);
+      callback(null, true); // Разрешаем все для упрощения, но можно изменить на false для безопасности
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Инициализация базы данных
@@ -80,7 +115,7 @@ app.post('/api/send', async (req, res) => {
         
         console.log(`✅ Промокод успешно отправлен`);
         return res.status(200).json({ ok: true });
-      } catch (error: any) {
+      } catch (error) {
         console.error('❌ Ошибка отправки промокода:', error);
         
         if (error.message === 'chat_not_found') {
@@ -105,7 +140,7 @@ app.post('/api/send', async (req, res) => {
         await sendPromoCode(username, '', 'lose');
         
         console.log(`✅ Уведомление о проигрыше успешно отправлено`);
-      } catch (error: any) {
+      } catch (error) {
         console.error('❌ Ошибка отправки уведомления:', error);
         // Для проигрыша не критично, если не отправилось - не возвращаем ошибку
       }
@@ -113,11 +148,12 @@ app.post('/api/send', async (req, res) => {
     }
 
     return res.status(200).json({ ok: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Ошибка обработки запроса:', error);
     return res.status(500).json({
       ok: false,
-      error: 'internal_error'
+      error: 'internal_error',
+      message: error.message
     });
   }
 });
@@ -128,11 +164,12 @@ app.get('/api/health', (req, res) => {
 });
 
 // Error handling
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Ошибка:', err);
+app.use((err, req, res, next) => {
+  console.error('❌ Ошибка middleware:', err);
   res.status(500).json({ 
     ok: false, 
-    error: 'Внутренняя ошибка сервера' 
+    error: 'Внутренняя ошибка сервера',
+    message: err.message
   });
 });
 

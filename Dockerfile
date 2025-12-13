@@ -1,8 +1,8 @@
-# Node.js Dockerfile для Railway с поддержкой SQLite
+# Node.js Dockerfile для Railway с поддержкой PostgreSQL
 FROM node:18-alpine
 
-# Установим SQLite и необходимые зависимости
-RUN apk add --no-cache python3 make g++ sqlite
+# Установим необходимые зависимости для сборки
+RUN apk add --no-cache python3 make g++
 
 # Установим рабочую директорию
 WORKDIR /app
@@ -17,12 +17,10 @@ RUN npm install -g tsx
 # Копируем весь исходный код
 COPY . .
 
-# Создаем директорию для данных БД
-RUN mkdir -p /app/data
-
 # Set environment variables for Railway
-ENV DB_PATH=/data/telegram.db
+# DATABASE_URL будет установлен автоматически Railway при добавлении PostgreSQL
 ENV TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN
+ENV NODE_ENV=production
 
 # Запускаем бота
 CMD ["npm", "run", "bot"]
