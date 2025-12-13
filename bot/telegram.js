@@ -5,8 +5,7 @@
  * Description: Telegram бот на Telegraf для отправки промокодов в игре крестики-нолики
  */
 import { Telegraf } from 'telegraf';
-import { getDatabase } from '../database.js';
-import { promisify } from 'util';
+import { getDatabase, saveUser, getUnusedPromoCode } from '../database.js';
 import { updateCalendarEventColor, deleteCalendarEvent } from '../services/calendar.js';
 import { setChatId } from '../lib/chatMap.js';
 
@@ -63,16 +62,10 @@ function setupHandlers() {
     // Сохраняем связь username -> chat_id в БД для последующей отправки сообщений
     if (username) {
       try {
-        const db = getDatabase();
-        const run = promisify(db.run.bind(db));
-        
-        // Создаем или обновляем запись пользователя
-        await run(`
-          INSERT OR REPLACE INTO telegram_users (username, chat_id, updated_at)
-          VALUES (?, ?, CURRENT_TIMESTAMP)
-        `, [username, userId]);
-                      // Also update the in-memory chatMap for API access
-                      setChatId(username, userId);
+        // Создаем или обновляем запись пользователя в PostgreSQL
+        await saveUser(userId, username);
+        // Also update the in-memory chatMap for API access
+        setChatId(username, userId);
         
         console.log(`💾💾💾 СВЯЗЬ СОХРАНЕНА В БД! 💾💾💾`);
         console.log(` username: @${username} -> chat_id: ${userId}`);
@@ -159,18 +152,18 @@ export async function sendPromoCode(username, code, status = 'win') {
   let isUsername = false;
   
   try {
-    const db = getDatabase();
-    const get = promisify(db.get.bind(db));
+    const pool = getDatabase();
     
     console.log(`🔍 Поиск chat_id в БД для username: @${cleanUsername}`);
-    // Регистронезависимый поиск username
-    const userRecord = await get(`
-      SELECT chat_id FROM telegram_users WHERE LOWER(username) = LOWER(?)
-    `, [cleanUsername]);
+    // Регистронезависимый поиск username в PostgreSQL
+    const result = await pool.query(
+      `SELECT chat_id FROM users WHERE LOWER(username) = LOWER($1)`,
+      [cleanUsername]
+    );
     
-    if (userRecord && userRecord.chat_id) {
+    if (result.rows && result.rows.length > 0 && result.rows[0].chat_id) {
       // Нашли chat_id в БД - используем его!
-      chatId = userRecord.chat_id;
+      chatId = result.rows[0].chat_id;
       console.log(`✅✅✅ НАЙДЕН CHAT_ID В БД! ✅✅✅`);
       console.log(` Username: @${cleanUsername}`);
       console.log(` Chat ID: ${chatId}`);
@@ -179,20 +172,19 @@ export async function sendPromoCode(username, code, status = 'win') {
     } else {
       // Не нашли в БД - пробуем отправить по username (может не сработать)
       console.log(`⚠️ chat_id не найден в БД для username @${cleanUsername}`);
-      console.log(` Проверяем все записи в таблице telegram_users...`);
+      console.log(` Проверяем все записи в таблице users...`);
       
       // Для отладки: показываем все записи
       try {
-        const all = promisify(db.all.bind(db));
-        const allUsers = await all(`SELECT username, chat_id FROM telegram_users`);
-        console.log(` Всего записей в telegram_users: ${allUsers?.length || 0}`);
-        if (allUsers && allUsers.length > 0) {
+        const allResult = await pool.query(`SELECT username, chat_id FROM users`);
+        console.log(` Всего записей в users: ${allResult?.rows?.length || 0}`);
+        if (allResult?.rows && allResult.rows.length > 0) {
           console.log(` Записи в БД:`);
-          allUsers.forEach(u => {
+          allResult.rows.forEach(u => {
             console.log(` - @${u.username} -> ${u.chat_id}`);
           });
         } else {
-          console.log(` ⚠️ Таблица telegram_users пуста!`);
+          console.log(` ⚠️ Таблица users пуста!`);
           console.log(` 💡 Пользователь должен отправить /start боту`);
         }
       } catch (debugError) {
