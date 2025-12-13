@@ -6,25 +6,17 @@
  */
 
 import sqlite3 from 'sqlite3';
-import { mkdirSync } from 'fs';
 import { promisify } from 'util';
-import { dirname } from 'path';
 
-import { fileURLToPath } from 'url';
 let db = null;
 
 /**
- * Инициализация базы данных
+ * Инициализирует базу данных
  */
 export async function initDatabase() {
   return new Promise((resolve, reject) => {
-
-      // Create data directory if it doesn't exist
-  const __dirname = dirname(fileURLToPath(import.meta.url));
-  const dataDir = __dirname + '/data';
-  mkdirSync(dataDir, { recursive: true });
-const dbPath = dataDir + '/app.db';
-      if (err) {
+    const dbPath = ':memory:'; // Use in-memory database for now
+    db = new sqlite3.Database(dbPath, (err) => {      if (err) {
         console.error('Ошибка подключения к БД:', err);
         reject(err);
         return;
