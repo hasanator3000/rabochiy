@@ -5,14 +5,8 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "source": "/api/send",
+      "destination": "https://rabochiy-production.up.railway.app/api/send"
     }
-  ],
-  "functions": {
-    "api/send.ts": {
-      "maxDuration": 10
-    }
-  }
+  ]
 }
-
