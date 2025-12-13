@@ -15,8 +15,8 @@ let db = null;
  */
 export async function initDatabase() {
   return new Promise((resolve, reject) => {
-const dbPath = ':memory:';
-    db = new sqlite3.Database(dbPath, (err) => {
+const dbPath = './data/app.db';
+  db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
         console.error('Ошибка подключения к БД:', err);
         reject(err);
