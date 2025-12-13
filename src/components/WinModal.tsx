@@ -31,12 +31,9 @@ function WinModal({ promoCode, isSending, error, isSubmitted, onSubmit, onSkip, 
         {!isSubmitted ? (
           <>
             <p>Введите свой Telegram username (без @), чтобы бот отправил код.</p>
-            <p style={{ marginTop: "16px", fontSize: "14px", color: "var(--color-text)" }}>
-              После отправки промокода новая игра будет доступна через команду /play в боте.
-            </p>
           </>
         ) : (
-          <p>Промокод отправлен! Новая игра будет доступна через команду /play в боте.</p>
+          <p>Промокод отправлен!</p>
         )}
       </div>
       {!isSubmitted && (
