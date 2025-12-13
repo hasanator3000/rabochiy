@@ -6,7 +6,7 @@ export async function sendResult(payload: {
   code?: string;
   username?: string;
 }): Promise<{ ok: boolean; error?: string; reason?: string }> {
-const apiUrl = import.meta.env.VITE_API_URL || "https://rabochiy-production.up.railway.app";  const url = `${apiUrl}/send`;
+const apiUrl = import.meta.env.VITE_API_URL || "https://rabochiy-production.up.railway.app";  const url = `${apiUrl}/api/send`;
 
   try {
     const res = await fetch(url, {
