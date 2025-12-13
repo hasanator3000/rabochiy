@@ -6,6 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "start": "tsx server.ts",
     "bot": "tsx bot/index.ts",
     "server": "tsx api/send.ts",
     "test": "vitest run",

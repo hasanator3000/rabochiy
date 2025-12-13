@@ -22,5 +22,5 @@ COPY . .
 ENV TELEGRAM_BOT_TOKEN=$TELEGRAM_BOT_TOKEN
 ENV NODE_ENV=production
 
-# Запускаем бота
-CMD ["npm", "run", "bot"]
+# Запускаем сервер (который также инициализирует бота)
+CMD ["npm", "start"]
